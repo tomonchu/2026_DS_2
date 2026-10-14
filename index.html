@@ -1,1 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10秒ピッタリゲーム</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            margin-top: 50px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        #timer-display {
+            font-size: 3rem;
+            margin: 20px 0;
+            font-weight: bold;
+            color: #007bff;
+            min-height: 60px;
+        }
+        button {
+            font-size: 1.2rem;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: white;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #start-btn {
+            background-color: #007bff;
+        }
+        #result, #message {
+            font-size: 1.5rem;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        #message {
+            color: #ffc107;
+        }
+    </style>
+</head>
+<body>
 
+    <h1>10秒ピッタリ当てゲーム</h1>
+    <p>スタート後、最初の3秒間だけ秒数が表示されます。</p>
+    <p>その後は秒数が隠れるので、頭の中で10秒を数えてボタンを押してください！</p>
+
+    <div id="timer-display">--:---</div>
+
+    <button id="start-btn" onclick="startGame()">スタート</button>
+    <button id="stop-btn" onclick="stopGame()" disabled>ストップ！</button>
+
+    <div id="result"></div>
+    <div id="message"></div>
+
+    <script>
+        let startTime = 0;
+        let timerInterval = null;
+        let isPlaying = false;
+
+        const display = document.getElementById('timer-display');
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const resultDiv = document.getElementById('result');
+        const messageDiv = document.getElementById('message');
+
+        function startGame() {
+            // リセット
+            resultDiv.textContent = '';
+            messageDiv.textContent = '';
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            isPlaying = true;
+
+            startTime = performance.now();
+
+            // 画面を更新するループ
+            timerInterval = requestAnimationFrame(updateTimer);
+        }
+
+        function updateTimer(currentTime) {
+            if (!isPlaying) return;
+
+            const elapsedTime = (currentTime - startTime) / 1000; // 秒に変換
+
+            if (elapsedTime <= 3.0) {
+                // 最初の3秒までは秒数を表示
+                display.textContent = elapsedTime.toFixed(2) + " 秒";
+                timerInterval = requestAnimationFrame(updateTimer);
+            } else {
+                // 3秒経ったら秒数を隠す
+                display.textContent = "??:??? (非表示)";
+                // バックグラウンドでの計測は継続するためループし続ける
+                timerInterval = requestAnimationFrame(updateTimer);
+            }
+        }
+
+        function stopGame() {
+            if (!isPlaying) return;
+            isPlaying = false;
+            cancelAnimationFrame(timerInterval);
+
+            const endTime = performance.now();
+            const totalTime = (endTime - startTime) / 1000;
+            const diff = Math.abs(10 - totalTime);
+
+            // 結果を表示
+            display.textContent = totalTime.toFixed(2) + " 秒";
+            resultDiv.textContent = `あなたのタイム: ${totalTime.toFixed(2)}秒 （誤差: ${diff.toFixed(2)}秒）`;
+
+            // 判定
+            if (diff <= 0.05) {
+                messageDiv.textContent = "神業！すごすぎる！！🎉";
+            } else if (diff <= 0.2) {
+                messageDiv.textContent = "すごい！めちゃくちゃ惜しい！✨";
+            } else if (diff <= 0.5) {
+                messageDiv.textContent = "おしい！いい感覚ですね！👍";
+            } else {
+                messageDiv.textContent = "もう一回挑戦してみよう！💪";
+            }
+
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        }
+    </script>
+
+</body>
+</html>
